@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Fotocopiados - UNAJ</title>
+    <script>
+      try {
+        const tema = localStorage.getItem("calcTema") || "light";
+        document.documentElement.setAttribute("data-theme", tema);
+      } catch(e){}
+    </script>
+    <link rel="stylesheet" href="/Style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+        import { getDatabase, ref, set, get, onValue, off } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0YFv49AUWjZtEl2KxgiytnFG4bzv5sMA",
+            authDomain: "fotocopiado-unaj.firebaseapp.com",
+            databaseURL: "https://fotocopiado-unaj-default-rtdb.firebaseio.com/",
+            projectId: "fotocopiado-unaj",
+            storageBucket: "fotocopiado-unaj.firebasestorage.app",
+            messagingSenderId: "198572714385",
+            appId: "1:198572714385:web:2ec73dfa4386daa47a5230",
+            measurementId: "G-SNQ58PSQJ2"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        window.firebaseApp = app;
+        window.firebaseDatabase = database;
+        window.firebaseRef = ref;
+        window.firebaseSet = set;
+        window.firebaseGet = get;
+        window.firebaseOnValue = onValue;
+        window.firebaseOff = off;
+        window.firebaseInitialized = true;
+
+        console.log("[v0] Firebase v9+ inicializado correctamente");
+    </script>
+    <link rel="icon" type="image/png" href="imagenes/unaj-removebg-preview.png">
+</head>
+<body>
+    <div id="loaderUNAJ">
+        <img src="/imagenes/unaj-removebg-preview.png" alt="UNAJ Logo" id="loaderUNAJLogo">
+        <div class="loader-textos">
+            <div class="loader-titulo">Universidad Nacional Arturo Jauretche</div>
+            <div class="loader-autor">Por Mauricio Ricotti</div>
+        </div>
+    </div>
+
+    <div id="turnoSelectorFixed" style="display:none;position:fixed;top:18px;right:18px;z-index:1001;background:var(--bg-card);padding:6px 12px 6px 10px;border-radius:8px;box-shadow:0 2px 8px var(--shadow);border:1px solid var(--border-color);display:flex;align-items:center;gap:6px;font-size:0.95rem;min-width:110px;">
+        <label for="turnoSelect" style="font-weight:600;font-size:0.97rem;">Turno:</label>
+        <select id="turnoSelect" class="calc-select" style="width:auto;display:inline-block;font-size:0.97rem;padding:6px 18px 6px 8px;">
+            <option value="TM">Mañana</option>
+            <option value="TT">Tarde</option>
+            <option value="TU">Turno único</option>
+        </select>
+    </div>
+
+    <div id="turnoModal" style="display:none;position:fixed;z-index:2000;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+        <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:340px;text-align:center;">
+            <h2 style="margin-bottom:18px;font-size:1.3rem;color:var(--text-heading);">Selecciona el turno</h2>
+            <select id="turnoModalSelect" class="calc-select" style="width:100%;font-size:1.1rem;margin-bottom:24px;">
+                <option value="" disabled selected>Elige un turno...</option>
+                <option value="TM">Mañana</option>
+                <option value="TT">Tarde</option>
+                <option value="TU">Turno único</option>
+            </select>
+            <button id="turnoModalBtn" class="calc-btn calc-btn-primary" style="width:100%;">Confirmar turno</button>
+        </div>
+    </div>
+
+    <div id="loginScreen" class="login-screen">
+        <div class="login-container" style="position:relative;">
+            <button class="menu-hamburguesa-btn" id="btnMenuHamburguesa" style="position:absolute;top:18px;left:18px;z-index:20;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="4" y1="7" x2="20" y2="7"/>
+                    <line x1="4" y1="12" x2="20" y2="12"/>
+                    <line x1="4" y1="17" x2="20" y2="17"/>
+                </svg>
+            </button>
+            <div class="login-header" style="position:relative;">
+                <h1 class="titulo-fotocopiados-unaj">
+                    <span>Sistema de Fotocopiados UNAJ</span>
+                </h1>
+                <p>Selecciona tu fotocopiado e ingresa la contraseña</p>
+            </div>
+            <div class="fotocopiados-grid">
+                <div class="fotocopiado-card" onclick="selectFotocopiado('salud')">
+                    <div class="fotocopiado-icon">
+                        <img src="/imagenes/institutodesaludperfil.jpg" alt="Instituto de Ciencias de la Salud" class="instituto-logo">
+                    </div>
+                    <h3>Fotocopiado de Salud</h3>
+                    <p>Instituto de Salud</p>
+                    <div id="passwordSection-salud" class="password-section-inline" style="display: none;">
+                        <div class="password-card-inline">
+                            <div class="password-input-group">
+                                <input type="password" id="passwordInput-salud" placeholder="Ingresa la contraseña" class="password-input">
+                                <button onclick="login('salud')" class="login-btn">Ingresar</button>
+                            </div>
+                            <button onclick="cancelLogin('salud')" class="cancel-btn">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="fotocopiado-card" onclick="selectFotocopiado('sociales')">
+                    <div class="fotocopiado-icon">
+                        <img src="/imagenes/intitutodecienciassocialesperfil.png" alt="Instituto de Ciencias Sociales y Administración" class="instituto-logo">
+                    </div>
+                    <h3>Fotocopiado de Sociales</h3>
+                    <p>Instituto de Ciencias Sociales</p>
+                    <div id="passwordSection-sociales" class="password-section-inline" style="display: none;">
+                        <div class="password-card-inline">
+                            <div class="password-input-group">
+                                <input type="password" id="passwordInput-sociales" placeholder="Ingresa la contraseña" class="password-input">
+                                <button onclick="login('sociales')" class="login-btn">Ingresar</button>
+                            </div>
+                            <button onclick="cancelLogin('sociales')" class="cancel-btn">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="fotocopiado-card" onclick="selectFotocopiado('ingenieria')">
+                    <div class="fotocopiado-icon">
+                        <img src="/imagenes/institutodeingenieriayagronomiaperfil.jpg" alt="Instituto de Ingeniería y Agronomía" class="instituto-logo">
+                    </div>
+                    <h3>Fotocopiado de Ingeniería</h3>
+                    <p>Instituto de Ingeniería</p>
+                    <div id="passwordSection-ingenieria" class="password-section-inline" style="display: none;">
+                        <div class="password-card-inline">
+                            <div class="password-input-group">
+                                <input type="password" id="passwordInput-ingenieria" placeholder="Ingresa la contraseña" class="password-input">
+                                <button onclick="login('ingenieria')" class="login-btn">Ingresar</button>
+                            </div>
+                            <button onclick="cancelLogin('ingenieria')" class="cancel-btn">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="fotocopiado-card hec-salud-fullwidth" onclick="selectFotocopiado('hec_salud')">
+                    <div class="fotocopiado-icon">
+                        <img src="/imagenes/82119bf6-9777-4039-b9fb-d843a9d3cdd1.png" alt="HEC Salud" class="instituto-logo">
+                    </div>
+                    <h3>Fotocopiado HEC</h3>
+                    <p>Hospital del Cruce<p>
+                    <div id="passwordSection-hec_salud" class="password-section-inline" style="display: none;">
+                        <div class="password-card-inline">
+                            <div class="password-input-group">
+                                <input type="password" id="passwordInput-hec_salud" placeholder="Ingresa la contraseña" class="password-input">
+                                <button onclick="login('hec_salud')" class="login-btn">Ingresar</button>
+                            </div>
+                            <button onclick="cancelLogin('hec_salud')" class="cancel-btn">Cancelar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <div id="modalEstadisticasAdmin" style="display:none;position:fixed;z-index:3000;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+      <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:340px;text-align:center;">
+        <h2 style="margin-bottom:18px;font-size:1.2rem;color:var(--text-heading);">Acceso al panel de control</h2>
+        <input type="password" id="inputPasswordEstadisticas" class="calc-input" placeholder="Contraseña de administrador" style="margin-bottom:18px;">
+        <div style="display:flex;gap:10px;">
+          <button class="calc-btn calc-btn-primary" id="btnConfirmarEstadisticas">Ingresar</button>
+          <button class="calc-btn calc-btn-secondary" id="btnCancelarEstadisticas">Cancelar</button>
+        </div>
+        <div id="msgEstadisticasAdmin" style="color:#ef4444;margin-top:12px;font-size:0.98rem;"></div>
+      </div>
+    </div>
+
+    <div id="calculatorScreen" class="calculadora-container" style="display: none;">
+        <div class="calculadora-wrapper">
+            <header class="calc-header">
+                <div class="calc-header-content">
+                    <div class="calc-header-text">
+                        <h1 id="fotocopiadoTitle">Calculadora de cobro</h1>
+                        <p id="fotocopiadoSubtitle">Sistema para empleados - Cálculo de impresiones</p>
+                    </div>
+                    <div class="header-controls">
+                        <button
+                            id="btnCierreTurno"
+                            class="logout-btn header-btn"
+                            title="Formulario de cierre de turno"
+                            style="width:44px;min-width:44px;height:44px;padding:0;display:flex;align-items:center;justify-content:center;"
+                            onclick="window.open('https://docs.google.com/forms/d/e/1FAIpQLSdlilE122kDBX8_lGz2FyAKIiNzsCBo0td4EknNtio4h25LWQ/viewform', '_blank')">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                              <rect x="4" y="4" width="16" height="16" rx="3" />
+                              <path d="M8 8h8M8 12h8M8 16h4"/>
+                            </svg>
+                        </button>
+                        <button
+                            id="calcThemeToggle"
+                            class="calc-theme-toggle header-btn"
+                            onclick="calcToggleTheme()"
+                            title="Cambiar tema">
+                            <span class="calc-theme-icon calc-sun-icon"></span>
+                            <span class="calc-theme-icon calc-moon-icon"></span>
+                        </button>
+                        <button
+                            onclick="logout()"
+                            class="logout-btn header-btn"
+                            title="Cerrar sesión">
+                            Salir
+                        </button>
+                    </div>
+                </div>
+            </header>
+            <div id="calcMainContent">
+                <div class="calc-card">
+                    <div class="calc-card-header">
+                        <div class="calc-card-title">
+                            Configuración de Precios
+                        </div>
+                    </div>
+                    <div class="calc-card-content">
+                        <div class="calc-grid calc-grid-cols-2" style="margin-bottom: 20px;">
+                            <div>
+                                <label class="calc-label">Precio hoja blanco y negro:</label>
+                                <div class="calc-flex">
+                                    <input type="number" id="calcPrecioHoja" value="40" min="1" class="calc-input calc-input-small">
+                                    <span style="color: var(--text-secondary);"></span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="calc-label">Precio hoja a color:</label>
+                                <div class="calc-flex">
+                                    <input type="number" id="calcPrecioHojaColor" value="115" min="1" class="calc-input calc-input-small">
+                                    <span style="color: var(--text-secondary);"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="calc-flex">
+                            <button onclick="calcAgregarArchivo()" class="calc-btn calc-btn-primary">
+                                Agregar Archivo
+                            </button>
+                            <button onclick="mostrarModalPerdidas()" class="calc-btn calc-btn-danger">
+                                Registrar pérdida
+                            </button>
+                            <button onclick="mostrarModalExtras()" class="calc-btn calc-btn-warning">
+                                Agregar extras
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="calcArchivosContainer"></div>
+                <div style="text-align: center; margin: 30px 0;">
+                    <div class="calc-botones-venta">
+                        <button onclick="calcCalcularTotal()" class="calc-btn calc-btn-primary">
+                            Calcular Total
+                        </button>
+                        <button onclick="calcCancelarVenta()" class="calc-btn calc-btn-secondary">
+                            Cancelar Venta
+                        </button>
+                    </div>
+                </div>
+                <div id="calcPagoContainer" class="calc-card calc-pago-card" style="display:none;">
+                    <div class="calc-card-header">
+                        <div class="calc-card-title" style="color: #059669;">
+                            Resumen de Venta
+                        </div>
+                    </div>
+                    <div class="calc-card-content">
+                        <div id="calcTotalDisplay" class="calc-total-display"></div>
+                        <div class="propina-group">
+                            <label id="calcPropinaLabel" for="calcPropinaInput">Propina:</label>
+                            <input type="number" id="calcPropinaInput" class="calc-input" min="0" step="1" placeholder="$0">
+                        </div>
+                        <div style="border-top: 1px solid var(--border-color); padding-top: 20px;">
+                            <label class="calc-label">Método de pago:</label>
+                            <div class="calc-checkbox-group">
+                                <label class="calc-checkbox-item">
+                                    <input type="checkbox" id="calcEfectivo" class="calc-checkbox" onchange="calcSeleccionarMetodo('efectivo')">
+                                    <span>Efectivo</span>
+                                </label>
+                                <label class="calc-checkbox-item">
+                                    <input type="checkbox" id="calcTransferencia" class="calc-checkbox" onchange="calcSeleccionarMetodo('transferencia')">
+                                    <span>Transferencia</span>
+                                </label>
+                                <label class="calc-checkbox-item">
+                                    <input type="checkbox" id="calcDividido" class="calc-checkbox" onchange="calcSeleccionarMetodo('dividido')">
+                                    <span>Pago dividido</span>
+                                </label>
+                            </div>
+                            <div id="calcDivididoInputs" style="display:none;gap:10px;margin-top:10px;align-items:center;">
+                                <label>Efectivo: <input type="number" id="calcDivididoEfectivo" class="calc-input" min="0" step="1" style="width:100px;"></label>
+                                <label>Transferencia: <input type="number" id="calcDivididoTransferencia" class="calc-input" min="0" step="1" style="width:100px;"></label>
+                                <span id="calcDivididoError" style="font-size:0.95rem; color:var(--text-secondary); margin-left:12px;"></span>
+                            </div>
+                        </div>
+                        <div class="calc-cambio-group">
+                            <label class="calc-label" for="calcDineroCliente">Dinero que entrega el cliente:</label>
+                            <input type="number" id="calcDineroCliente" placeholder="Ingrese el monto" class="calc-input calc-input-small">
+                            <button onclick="calcCalcularCambio()" class="calc-btn calc-btn-secondary">
+                                Calcular Cambio
+                            </button>
+                        </div>
+                        <div id="calcResultadoCambio" style="display:none;"></div>
+                        <div style="text-align: center; margin-top: 20px;">
+                            <button onclick="calcFinalizarVenta()" class="calc-btn calc-btn-success" style="padding: 12px 24px; font-size: 1.1rem;" id="calcBtnFinalizar" disabled>
+                                Finalizar Venta
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="calc-card">
+                <div class="calc-card-header">
+                    <div class="calc-flex-between">
+                        <div class="calc-card-title">
+                            Registro
+                            <span id="syncStatus" class="sync-indicator" title="Estado de sincronización">🔄</span>
+                        </div>
+                        <div class="calc-flex" style="gap: 12px;">
+                            <!-- <button onclick="calcExportarExcel()" class="calc-btn calc-btn-outline">
+                                Exportar a Excel
+                            </button> -->
+                            <button onclick="calcExportarPDF()" class="calc-btn calc-btn-outline">
+                                Exportar a PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="calc-card-content">
+                    <table class="calc-table">
+                        <thead>
+                            <tr>
+                                <th>Método de Pago</th>
+                                <th style="text-align: right;">Total Acumulado</th>
+                                <th style="text-align: center;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Efectivo</td>
+                                <td style="text-align: right; font-family: monospace; font-size: 1.1rem;" id="calcTotalEfectivo">$0</td>
+                                <td style="text-align: center;">
+                                    <button onclick="calcMostrarDetalles('efectivo')" class="calc-btn calc-btn-outline" style="padding: 6px 12px; font-size: 0.9rem;">
+                                        Ver detalles (<span id="calcCountEfectivo">0</span>)
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Transferencia</td>
+                                <td style="text-align: right; font-family: monospace; font-size: 1.1rem;" id="calcTotalTransferencia">$0</td>
+                                <td style="text-align: center;">
+                                    <button onclick="calcMostrarDetalles('transferencia')" class="calc-btn calc-btn-outline" style="padding: 6px 12px; font-size: 0.9rem;">
+                                        Ver detalles (<span id="calcCountTransferencia">0</span>)
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Pagos divididos</td>
+                                <td style="text-align: right; font-family: monospace; font-size: 1.1rem;" id="calcTotalDividido">
+                                    <span id="calcTotalDivididoEfectivo">$0</span> | 
+                                    <span id="calcTotalDivididoTransferencia">$0</span>
+                                </td>
+                                <td style="text-align: center;">
+                                    <button onclick="calcMostrarDetalles('dividido')" class="calc-btn calc-btn-outline" style="padding: 6px 12px; font-size: 0.9rem;">
+                                        Ver detalles (<span id="calcCountDividido">0</span>)
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="calc-table-total">
+                                <td>Total General</td>
+                                <td style="text-align: right; font-family: monospace; font-size: 1.2rem;" id="calcTotalGeneral">$0</td>
+                                <td style="text-align: center;">
+                                    <span style="font-size: 0.9rem; color: var(--text-secondary);" id="calcTotalVentas">0 ventas</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="calc-table-mobile">
+                        <div class="calc-mobile-card">
+                            <div class="calc-mobile-card-header">
+                                <span>Efectivo</span>
+                                <span class="calc-mobile-card-total" id="calcTotalEfectivoMobile">$0</span>
+                            </div>
+                            <div class="calc-mobile-card-actions">
+                                <button onclick="calcMostrarDetalles('efectivo')" class="calc-btn calc-btn-outline" style="padding: 8px 16px; font-size: 0.9rem;">
+                                    Ver detalles (<span id="calcCountEfectivoMobile">0</span>)
+                                </button>
+                            </div>
+                        </div>
+                        <div class="calc-mobile-card">
+                            <div class="calc-mobile-card-header">
+                                <span>Transferencia</span>
+                                <span class="calc-mobile-card-total" id="calcTotalTransferenciaMobile">$0</span>
+                            </div>
+                            <div class="calc-mobile-card-actions">
+                                <button onclick="calcMostrarDetalles('transferencia')" class="calc-btn calc-btn-outline" style="padding: 8px 16px; font-size: 0.9rem;">
+                                    Ver detalles (<span id="calcCountTransferenciaMobile">0</span>)
+                                </button>
+                            </div>
+                        </div>
+                        <div class="calc-mobile-card">
+                            <div class="calc-mobile-card-header">
+                                <span>Pagos divididos</span>
+                                <span class="calc-mobile-card-total" id="calcTotalDivididoMobile">
+                                    <span id="calcTotalDivididoEfectivoMobile">$0</span> | 
+                                    <span id="calcTotalDivididoTransferenciaMobile">$0</span>
+                                </span>
+                            </div>
+                            <div class="calc-mobile-card-actions">
+                                <button onclick="calcMostrarDetalles('dividido')" class="calc-btn calc-btn-outline" style="padding: 8px 16px; font-size: 0.9rem;">
+                                    Ver detalles (<span id="calcCountDivididoMobile">0</span>)
+                                </button>
+                            </div>
+                        </div>
+                        <div class="calc-mobile-card calc-mobile-total-card">
+                            <div class="calc-mobile-card-header">
+                                <span>Total General</span>
+                                <span class="calc-mobile-card-total" id="calcTotalGeneralMobile">$0</span>
+                            </div>
+                            <div style="text-align: center; font-size: 0.9rem; color: var(--text-secondary);" id="calcTotalVentasMobile">0 ventas</div>
+                        </div>
+                    </div>
+                    <div class="registros-ventas-btn-group">
+                        <button onclick="actualizarYRefrescarTabla()" class="calc-btn calc-btn-primary">
+                            Actualizar
+                        </button>
+                        <button onclick="calcRestablecerVentas()" class="calc-btn calc-btn-warning">
+                            Restablecer
+                        </button>
+                        <button onclick="pedirPasswordRecuperarBackup()" class="calc-btn calc-btn-secondary">
+                            Recuperar último registro
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="calcDetallesContainer" class="calc-card" style="display:none;">
+                <div class="calc-card-header">
+                    <div class="calc-flex-between">
+                        <div class="calc-card-title" id="calcDetallesTitle">Detalles de Ventas</div>
+                        <button onclick="calcOcultarDetalles()" class="calc-btn calc-btn-outline" style="padding: 6px 12px;">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+                <div class="calc-card-content">
+                    <div id="calcDetallesContent" class="calc-detalles"></div>
+                    <div style="margin-top:16px; text-align:center;">
+                        <button id="btnAgregarPropinaDetalle" class="calc-btn calc-btn-success" style="display:none;" onclick="agregarPropinaADetalle(window.ventaDetalleIdMostrado)">Agregar/Modificar propina</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="calcComparativaScreen" class="calculadora-container" style="display: none;">
+        <div class="calculadora-wrapper">
+            <header class="calc-header">
+                <div class="calc-header-content">
+                    <div class="calc-header-text">
+                        <h1>Comparativa por Fotocopiado</h1>
+                        <p>Análisis de ventas y rendimiento por fotocopiado</p>
+                    </div>
+                    <div class="header-controls">
+                        <button onclick="calcActualizarComparativa()" class="calc-btn calc-btn-outline header-btn" title="Actualizar datos">
+                            Actualizar
+                        </button>
+                        <button onclick="calcExportarEstadisticasPDF()" class="calc-btn calc-btn-outline header-btn" title="Exportar estadísticas a PDF">
+                            Exportar
+                        </button>
+                        <button onclick="exportarTodosLosRegistrosPDFZip()" class="calc-btn calc-btn-outline header-btn" title="Descargar registros de los 3 copiados en ZIP">
+                            Descargar .ZIP
+                        </button>
+                        <button class="calc-btn calc-btn-outline header-btn" onclick="abrirCompararMesesFacturacion()">Comparacion mensual</button>
+                        <button id="calcThemeToggleComp" class="calc-theme-toggle header-btn" onclick="calcToggleTheme()" title="Cambiar tema">
+                            <span id="themeTextComp" class="calc-theme-text">🌙 Oscuro</span>
+                        </button>
+                        <button class="calc-btn calc-btn-outline header-btn"
+                        onclick="window.open('https://drive.google.com/drive/folders/16nTPw7TOAvRL_DUXsdNUiHF4cQhvIPQz?usp=sharing ', '_blank')"
+                        title="Abrir carpeta de Drive">
+                        Drive
+                    </button>
+                    <button class="calc-btn calc-btn-outline header-btn" onclick="abrirModalHistorico()">Consulta de ingresos</button>
+
+                    <!-- <button id="btnLimpiarBaseDatos" class="calc-btn calc-btn-danger">
+                        Limpiar Base de Datos
+                    </button> -->
+                    
+                    <button onclick="calcVolverDesdeComparativa()" class="calc-btn calc-btn-outline header-btn" title="Volver">
+                        Volver
+                    </button>
+                    <div id="modalLimpiarBaseDatos" style="display:none;position:fixed;z-index:10001;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+                        <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:340px;text-align:center;">
+                            <h2 style="margin-bottom:18px;font-size:1.2rem;color:var(--text-heading);">Limpiar toda la base de datos</h2>
+                            <input type="password" id="inputPasswordLimpiarBD" class="calc-input" placeholder="Contraseña de administrador" style="margin-bottom:18px;">
+                            <div style="display:flex;gap:10px;">
+                                <button class="calc-btn calc-btn-danger" id="btnConfirmarLimpiarBD">Limpiar</button>
+                                <button class="calc-btn calc-btn-secondary" id="btnCancelarLimpiarBD">Cancelar</button>
+                            </div>
+                            <div id="msgLimpiarBD" style="color:#ef4444;margin-top:12px;font-size:0.98rem;"></div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </header>
+            <div class="calc-grid calc-grid-cols-3" style="margin-bottom: 32px;">
+                <div class="calc-card">
+                    <div class="calc-card-content" style="text-align: center;">
+                        <h3 style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 8px;">Total General</h3>
+                        <div id="calcTotalGeneralComp" style="font-size: 2rem; font-weight: 700; color: #10b981;">$0</div>
+                    </div>
+                </div>
+                <div class="calc-card">
+                    <div class="calc-card-content" style="text-align: center;">
+                        <h3 style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 8px;">Fotocopiado Líder</h3>
+                        <div id="calcInstitutoLider" style="font-size: 1.2rem; font-weight: 600; color: var(--text-heading);">-</div>
+                    </div>
+                </div>
+                <div class="calc-card">
+                    <div class="calc-card-content" style="text-align: center;">
+                        <h3 style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 8px;">Ventas Totales</h3>
+                        <div id="calcVentasTotales" style="font-size: 2rem; font-weight: 700; color: #3b82f6;">0</div>
+                    </div>
+                </div>
+            </div>
+            <div class="calc-grid calc-grid-cols-2" style="margin-bottom: 32px;">
+                <div class="calc-card">
+                    <div class="calc-card-header">
+                        <div class="calc-card-title">Ingresos por Fotocopiados</div>
+                    </div>
+                    <div class="calc-card-content">
+                        <div class="calc-chart-container">
+                            <canvas id="calcChartIngresos"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="calc-card">
+                    <div class="calc-card-header">
+                        <div class="calc-card-title">Métodos de Pago</div>
+                    </div>
+                    <div class="calc-card-content">
+                        <div class="calc-chart-container">
+                            <canvas id="calcChartMetodos"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="calc-card">
+                <div class="calc-card-header" style="display:flex;justify-content:space-between;align-items:center;">
+                    <div class="calc-card-title">Detalles por Fotocopiado</div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="scroll-btn" id="btnScrollLeftDetalles" title="Deslizar a la izquierda">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="15 18 9 12 15 6"/></svg>
+                        </button>
+                        <button class="scroll-btn" id="btnScrollRightDetalles" title="Deslizar a la derecha">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 6 15 12 9 18"/></svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="calc-card-content">
+                    <div id="calcDetallesGrid" class="calc-details-grid"></div>
+                </div>
+            </div>
+
+            <div class="calc-card card-formularios-cierre-turno" id="cardFormulariosCierreTurno">
+              <div class="calc-card-header">
+                <div class="calc-card-title">Links de formularios de cierre de turno</div>
+              </div>
+              <div class="calc-card-content">
+                <form class="form-cierre-turno-grid" autocomplete="off" onsubmit="return false;">
+                  <div class="form-row">
+                    <label>
+                      Salud:
+                      <span id="labelLinkSalud" class="form-link-label"></span>
+                      <button type="button" class="btn-ir-link" id="btnIrSalud" title="Ir al formulario">IR</button>
+                    </label>
+                    <input type="text" id="inputFormularioSalud" placeholder="Nuevo link para Salud">
+                  </div>
+                  <div class="form-row">
+                    <label>
+                      Sociales:
+                      <span id="labelLinkSociales" class="form-link-label"></span>
+                      <button type="button" class="btn-ir-link" id="btnIrSociales" title="Ir al formulario">IR</button>
+                    </label>
+                    <input type="text" id="inputFormularioSociales" placeholder="Nuevo link para Sociales">
+                  </div>
+                  <div class="form-row">
+                    <label>
+                      Ingeniería:
+                      <span id="labelLinkIngenieria" class="form-link-label"></span>
+                      <button type="button" class="btn-ir-link" id="btnIrIngenieria" title="Ir al formulario">IR</button>
+                    </label>
+                    <input type="text" id="inputFormularioIngenieria" placeholder="Nuevo link para Ingeniería">
+                  </div>
+                  <div class="form-row">
+                    <label>
+                      HEC:
+                      <span id="labelLinkHEC" class="form-link-label"></span>
+                      <button type="button" class="btn-ir-link" id="btnIrHEC" title="Ir al formulario">IR</button>
+                    </label>
+                    <input type="text" id="inputFormularioHEC" placeholder="Nuevo link para HEC Salud">
+                  </div>
+                  <div class="form-row form-row-btn">
+                    <button class="calc-btn calc-btn-primary" id="btnGuardarFormulariosCierreTurno" style="width:100%;">Guardar</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <div id="panelRegistroImpresoras" class="calc-card" style="margin-top:32px;">
+                <div class="calc-card-header">
+                    <div class="calc-card-title">Registro de uso de impresoras</div>
+                    <div class="impresoras-filtros-bar">
+                      <label>Fecha:</label>
+                      <input type="date" id="filtroFechaImpresoras" class="calc-input filtro-input" value="">
+                      <label>Copiado:</label>
+                      <select id="filtroCopiadoImpresoras" class="calc-select filtro-input">
+                        <option value="todos">Todos</option>
+                        <option value="salud">Salud</option>
+                        <option value="sociales">Sociales</option>
+                        <option value="ingenieria">Ingeniería</option>
+                        <option value="becas_salud">Becas Salud</option>
+                        <option value="becas_ingenieria">Becas Ingeniería</option>
+                        <option value="hec">HEC</option>
+                      </select>
+                      <label>Turno:</label>
+                      <select id="filtroTurnoImpresoras" class="calc-select filtro-input">
+                        <option value="todos">Todos</option>
+                        <option value="TM">Mañana</option>
+                        <option value="TT">Tarde</option>
+                        <option value="TU">Turno único</option>
+                      </select>
+                      <button class="calc-btn calc-btn-primary buscar-impresoras-btn" id="btnBuscarImpresoras">Buscar</button>
+                      <button class="calc-btn calc-btn-outline" id="btnVerRegistroMesImpresoras">Ver registro del mes</button>
+                      <button class="calc-btn calc-btn-outline" id="btnReporteContadoresImpresoras">Reporte contadores</button>
+                    </div>
+                </div>
+                <div class="calc-card-content" id="listaRegistroImpresoras"></div>
+              </div>
+
+              <div id="reportesPanelControl" class="calc-card" style="margin-top:48px;">
+                <div class="calc-card-header">
+                    <div class="calc-card-title">Reportes y Sugerencias</div>
+                    <div style="margin-top:10px;">
+                        <select id="filtroEstadoReporte" class="calc-select" style="width:auto;display:inline-block;">
+                            <option value="todos">Todos</option>
+                            <option value="revision">En revisión</option>
+                            <option value="solucionado">Solucionado</option>
+                            <option value="descartado">Descartado</option>
+                        </select>
+                        <select id="filtroMesReporte" class="calc-select" style="width:auto;display:inline-block;">
+                        </select>
+                    </div>
+                </div>
+                <div class="calc-card-content" id="reportesListaPanel"></div>
+              </div>
+
+              <div class="calc-card" id="cardCambiarContrasenasWrapper" style="margin-top:32px;">
+                <div class="calc-card-header">
+                  <div class="calc-card-title">Cambiar contraseñas</div>
+                </div>
+                <div class="calc-card-content">
+                  <div class="contrasenas-explicacion" id="contrasenasExplicacion" style="flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+                    <span id="contrasenasExplicacionTexto" style="font-size:1.08rem;font-weight:600;display:block;width:100%;margin-bottom:18px;">
+                      ⚠️ Las contraseñas de los copiados son información sensible.<br>
+                      Solo el administrador puede cambiarlas.
+                    </span>
+                    <button id="btnDesplegarContrasenas" class="btn-flecha-desplegar" aria-label="Mostrar contraseñas" style="margin:0 auto;">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    </button>
+                  </div>
+                  <div id="cardCambiarContrasenas" class="card-cambiar-contrasenas oculto">
+                    <form id="formCambiarContrasenas" autocomplete="off">
+                      <fieldset>
+                        <legend>Contraseñas de copiados</legend>
+                        <div class="calc-grid calc-grid-cols-2" style="margin-bottom: 12px;">
+                          <div>
+                            <label class="calc-label" for="passSaludActual">Salud (actual)</label>
+                            <input type="password" id="passSaludActual" class="calc-input" autocomplete="current-password" placeholder="Contraseña actual">
+                            <label class="calc-label" for="passSaludNueva" style="margin-top:8px;">Salud (nueva)</label>
+                            <input type="password" id="passSaludNueva" class="calc-input" autocomplete="new-password" placeholder="Nueva contraseña">
+                            <div id="verPassSalud" style="margin-top:6px;font-size:0.97em;"></div>
+                          </div>
+                          <div>
+                            <label class="calc-label" for="passSocialesActual">Sociales (actual)</label>
+                            <input type="password" id="passSocialesActual" class="calc-input" autocomplete="current-password" placeholder="Contraseña actual">
+                            <label class="calc-label" for="passSocialesNueva" style="margin-top:8px;">Sociales (nueva)</label>
+                            <input type="password" id="passSocialesNueva" class="calc-input" autocomplete="new-password" placeholder="Nueva contraseña">
+                            <div id="verPassSociales" style="margin-top:6px;font-size:0.97em;"></div>
+                          </div>
+                          <div>
+                            <label class="calc-label" for="passIngenieriaActual">Ingeniería (actual)</label>
+                            <input type="password" id="passIngenieriaActual" class="calc-input" autocomplete="current-password" placeholder="Contraseña actual">
+                            <label class="calc-label" for="passIngenieriaNueva" style="margin-top:8px;">Ingeniería (nueva)</label>
+                            <input type="password" id="passIngenieriaNueva" class="calc-input" autocomplete="new-password" placeholder="Nueva contraseña">
+                            <div id="verPassIngenieria" style="margin-top:6px;font-size:0.97em;"></div>
+                          </div>
+                          <div>
+                            <label class="calc-label" for="passHECActual">HEC Salud (actual)</label>
+                            <input type="password" id="passHECActual" class="calc-input" autocomplete="current-password" placeholder="Contraseña actual">
+                            <label class="calc-label" for="passHECNueva" style="margin-top:8px;">HEC Salud (nueva)</label>
+                            <input type="password" id="passHECNueva" class="calc-input" autocomplete="new-password" placeholder="Nueva contraseña">
+                            <div id="verPassHEC" style="margin-top:6px;font-size:0.97em;"></div>
+                          </div>
+                        </div>
+                      </fieldset>
+                      <fieldset>
+                        <legend>Contraseña de administrador</legend>
+                        <div class="calc-grid" style="margin-bottom: 12px;">
+                          <div style="grid-column: span 2; background:var(--bg-card-header);border-radius:10px;padding:18px 16px 10px 16px;box-shadow:0 1px 4px var(--shadow);margin-bottom:0;">
+                            <label class="calc-label" for="passAdminActual">Administrador (actual)</label>
+                            <input type="password" id="passAdminActual" class="calc-input" autocomplete="current-password" placeholder="Contraseña actual">
+                            <label class="calc-label" for="passAdminNueva" style="margin-top:8px;">Administrador (nueva)</label>
+                            <input type="password" id="passAdminNueva" class="calc-input" autocomplete="new-password" placeholder="Nueva contraseña">
+                            <div id="verPassAdmin" style="margin-top:6px;font-size:0.97em;"></div>
+                          </div>
+                        </div>
+                      </fieldset>
+                      <div style="margin-top:18px;display:flex;gap:12px;">
+                        <button type="submit" class="calc-btn calc-btn-success">Guardar cambios</button>
+                        <button type="button" class="calc-btn calc-btn-secondary" id="btnCancelarCambiarContrasenas">Cancelar</button>
+                      </div>
+                      <div id="msgCambiarContrasenas" style="margin-top:12px;font-size:0.98rem;"></div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+        </div>
+    </div>
+
+    <div id="modalHistorico" style="display:none;position:fixed;z-index:4000;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+      <div class="modal-historico-horizontal">
+        <div class="modal-historico-col selector">
+          <h2 style="margin-bottom: 15px;"><b> Consultar Ingresos</b></h2>
+          <label>Fotocopiado:</label>
+          <select style="margin-bottom: 5px; margin-top: 5px;" id="historicoFotocopiado" class="calc-select">
+            <option value="salud">Salud</option>
+            <option value="sociales">Sociales</option>
+            <option value="ingenieria">Ingeniería</option>
+            <option value="hec_salud">HEC</option>
+          </select>
+          <label>Fecha:</label>
+          <input style="margin-bottom: 5px; margin-top: 5px;" type="date" id="historicoFecha" class="calc-input">
+          <label>Turno:</label>
+          <select style="margin-bottom: 5px; margin-top: 5px;" id="historicoTurno" class="calc-select">
+            <option value="TM">Mañana</option>
+            <option value="TT">Tarde</option>
+            <option value="TU">Turno único</option>
+          </select>
+          <div style="margin-top:18px;">
+            <button class="calc-btn calc-btn-primary" onclick="consultarHistorico()">Consultar</button>
+            <button class="calc-btn calc-btn-secondary" onclick="cerrarModalHistorico()">Cerrar</button>
+          </div>
+        </div>
+        <div class="modal-historico-col resultados">
+          <div id="resultadoHistorico" style="margin-top:0;"></div>
+            <button class="calc-btn calc-btn-outline" id="btnExportarHistoricoPDF" style="margin-top:18px;display:none;">Exportar PDF</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modalReportesSugerencias" style="display:none;position:fixed;z-index:5000;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+      <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:340px;text-align:center;">
+        <h2 style="margin-bottom:18px;font-size:1.2rem;color:var(--text-heading);">Enviar reporte o sugerencia</h2>
+        <label style="font-weight:600;">Tipo:</label>
+        <select id="reportTipo" class="calc-select" style="margin-bottom:14px;">
+          <option value="reporte">Reporte</option>
+          <option value="sugerencia">Sugerencia</option>
+        </select>
+        <label style="font-weight:600;">Nombre y Apellido:</label>
+        <input type="text" id="reportNombre" maxlength="60" class="calc-input" style="margin-bottom:14px;" placeholder="Nombre y apellido">
+        <label style="font-weight:600;">Descripción:</label>
+        <textarea id="reportDescripcion" class="calc-input" style="margin-bottom:18px;height:80px;" maxlength="300" placeholder="Escribe aquí tu reporte o sugerencia"></textarea>
+        <div style="display:flex;gap:10px;">
+          <button class="calc-btn calc-btn-primary" id="btnAgregarReporte">Agregar</button>
+          <button class="calc-btn calc-btn-secondary" id="btnCancelarReporte">Cancelar</button>
+        </div>
+        <div id="msgReporte" style="color:#ef4444;margin-top:12px;font-size:0.98rem;"></div>
+      </div>
+    </div>
+
+    <div id="modalRegistroImpresoras" style="display:none;position:fixed;z-index:6000;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+      <div class="modal-registro-impresoras-content">
+        <div class="registro-form-col">
+          <h2>Registro de contadores</h2>
+
+          <label>Copiado:</label>
+          <select id="registroCopiado" class="calc-select">
+            <option value="salud">Salud</option>
+            <option value="sociales">Sociales</option>
+            <option value="ingenieria">Ingeniería</option>
+            <option value="becas_salud">Becas Salud</option>
+            <option value="becas_ingenieria">Becas Ingeniería</option>
+            <option value="hec">HEC</option>
+          </select>
+
+          <label>Turno:</label>
+          <select id="registroTurno" class="calc-select">
+            <option value="TM">Mañana</option>
+            <option value="TT">Tarde</option>
+            <option value="TU">Turno único</option>
+          </select>
+
+          <label>Fecha:</label>
+          <input type="date" id="registroFecha" class="calc-input">
+
+          <label>Impresoras:</label>
+          <div id="registroImpresorasLista" style="margin-bottom:8px;max-height:220px;overflow:auto;"></div>
+
+          <hr style="margin:12px 0;border-color:var(--border-color)">
+
+          <label style="font-weight:700;margin-bottom:6px;display:block;">Gestionar lista de impresoras</label>
+
+          <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center;">
+            <input id="inputNuevaImpresora" class="calc-input" placeholder="NUEVA IMPRESORA" style="flex:1;text-transform:uppercase; font-size: 0.80rem;" />
+            <button id="btnAgregarImpresora" class="calc-btn calc-btn-primary">Agregar</button>
+          </div>
+
+          <div id="listaInstruccionesImpresoras" style="color:var(--text-secondary);font-size:0.95rem;margin-bottom:8px;">
+            IMPORTANTE:. Para una impresora a color agrega la palabra <b>COLOR</b> al final del nombre (ej. <i>MAURO COLOR</i>). Para blanco y negro no incluyas la palabra <b>COLOR</b> (ej. <i>MAURO</i> o <i>MAURO B/N</i>).
+          </div>
+
+          <div id="listaImpresorasGestion" style="margin-bottom:10px;color:var(--text-secondary);max-height:170px;overflow:auto;"></div>
+
+          <div style="margin-top:8px;">
+            <button class="calc-btn calc-btn-primary" id="btnGuardarRegistroImpresoras">Guardar</button>
+            <button class="calc-btn calc-btn-secondary" id="btnCancelarRegistroImpresoras">Cancelar</button>
+          </div>
+        </div>
+
+        <div class="registro-impresoras-col" id="registroImpresorasArchivos"></div>
+      </div>
+    </div>
+
+    <div id="panelRegistroImpresoras" class="calc-card" style="margin-top:32px; display:none;">
+      <div class="calc-card-header">
+        <div class="calc-card-title">Registro de uso de impresoras</div>
+        <div class="impresoras-filtros-bar">
+          <label>Fecha:</label>
+          <input type="date" id="filtroFechaImpresoras" class="calc-input filtro-input" value="">
+          <label>Copiado:</label>
+          <select id="filtroCopiadoImpresoras" class="calc-select filtro-input">
+            <option value="todos">Todos</option>
+            <option value="salud">Salud</option>
+            <option value="sociales">Sociales</option>
+            <option value="ingenieria">Ingeniería</option>
+            <option value="becas_salud">Becas Salud</option>
+            <option value="becas_ingenieria">Becas Ingeniería</option>
+            <option value="hec">HEC</option>
+          </select>
+          <label>Turno:</label>
+          <select id="filtroTurnoImpresoras" class="calc-select filtro-input">
+            <option value="todos">Todos</option>
+            <option value="TM">Mañana</option>
+            <option value="TT">Tarde</option>
+            <option value="TU">Turno único</option>
+          </select>
+          <button class="calc-btn calc-btn-primary buscar-impresoras-btn" id="btnBuscarImpresoras">Buscar</button>
+          <button class="calc-btn calc-btn-outline" id="btnVerRegistroMesImpresoras">Ver registro del mes</button>
+        </div>
+      </div>
+      <div class="calc-card-content" id="listaRegistroImpresoras"></div>
+    </div>
+
+    <div id="modalVerRegistroMesImpresoras" style="display:none;position:fixed;z-index:7000;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+      <div>
+        <div class="modal-col-selector">
+          <h2>Ver registro del mes</h2>
+          <label>Selecciona el mes:</label>
+          <select id="mesRegistroImpresoras" class="calc-select"></select>
+          <label>Filtrar por fecha:</label>
+          <input type="date" id="fechaRegistroImpresoras" class="calc-input">
+          <label>Filtrar por copiado:</label>
+          <select id="copiadoRegistroImpresoras" class="calc-select">
+            <option value="todos">Todos</option>
+            <option value="salud">Salud</option>
+            <option value="sociales">Sociales</option>
+            <option value="ingenieria">Ingeniería</option>
+            <option value="becas_salud">Becas Salud</option>
+            <option value="becas_ingenieria">Becas Ingeniería</option>
+            <option value="hec">HEC</option>
+          </select>
+          <label>Filtrar por turno:</label>
+          <select id="turnoRegistroImpresoras" class="calc-select">
+            <option value="todos">Todos</option>
+            <option value="TM">Mañana</option>
+            <option value="TT">Tarde</option>
+            <option value="TU">Turno único</option>
+          </select>
+          <button class="calc-btn calc-btn-secondary" id="btnCerrarRegistroMesImpresoras">Cerrar</button>
+          <button class="calc-btn calc-btn-danger" id="btnLimpiarRegistroMesImpresoras" style="margin-top:10px;">Limpiar mes</button>
+        </div>
+        <div class="modal-col-table">
+          <table id="tablaRegistroMesImpresoras">
+            <thead>
+              <tr>
+                <th style="width: 56px; text-align: center;">Eliminar</th>
+                <th>Fecha</th>
+                <th>Maquina</th>
+                <th>Copiado</th>
+                <th>Turno</th>
+                <th>Apertura</th>
+                <th>Cierre</th>
+                <th>Diferencia</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <button class="calc-btn calc-btn-outline" id="btnExportarRegistroMesImpresorasPDF" style="margin-top:18px;">Exportar PDF</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modalReporteContadoresImpresoras" style="display:none;position:fixed;z-index:8000;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+      <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:98vw;width:98vw;max-height:95vh;overflow:auto;">
+        <h2 style="margin-bottom:18px;font-size:1.2rem;color:var(--text-heading);">Reporte de contadores de impresoras</h2>
+        <div style="display:flex;gap:18px;flex-wrap:wrap;align-items:center;margin-bottom:18px;">
+          <label>Desde: <input type="date" id="reporteContadoresDesde" class="calc-input" style="width:150px;"></label>
+          <label>Hasta: <input type="date" id="reporteContadoresHasta" class="calc-input" style="width:150px;"></label>
+          <button class="calc-btn calc-btn-primary" id="btnGenerarReporteContadores">Generar</button>
+          <button class="calc-btn calc-btn-secondary" id="btnCerrarReporteContadores">Cerrar</button>
+          <button class="calc-btn calc-btn-outline" id="btnExportarReporteContadoresPDF" style="display:none;">Exportar PDF</button>
+        </div>
+        <div id="tablaReporteContadoresImpresoras"></div>
+      </div>
+    </div>
+
+    <div id="menuLateralOverlay" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;background:rgba(30,41,59,0.22);backdrop-filter:blur(3px);"></div>
+    <div class="menu-lateral-panel" id="menuLateralPanel">
+        <div class="menu-lateral-content">
+            <button class="menu-lateral-cerrar" id="btnCerrarMenuLateral" title="Cerrar menú">&times;</button>
+            <h2 style="margin-bottom:18px;">Menú</h2>
+            <ul style="list-style:none;padding:0;margin:0;">
+                <li>
+                    <button id="btnEstadisticasLogin" class="calc-btn calc-btn-primary" style="width:100%; margin-bottom:12px;">
+                        Panel de control
+                    </button>
+                </li>
+                <li>
+                    <button id="btnRegistrarImpresoras" class="calc-btn calc-btn-primary" style="width:100%;margin-bottom:12px;">
+                        Registrar contadores
+                    </button>
+                </li>
+                <li>
+                    <button id="btnReportesSugerencias" class="calc-btn calc-btn-outline" style="width:100%;margin-bottom:12px;">
+                        Reportes y Sugerencias
+                    </button>
+                </li>
+                <li>
+                    <button id="btnCambiarTemaLateral" class="calc-btn calc-btn-outline" style="width:100%;margin-bottom:12px;">
+                        Cambiar tema
+                    </button>
+                </li>
+            </ul>
+            <div style="margin-top:32px;padding:18px 12px 8px 12px;border-top:1px solid var(--border-color);font-size:0.98rem;color:var(--text-secondary);">
+                <div style="font-weight:600;color:var(--text-heading);margin-bottom:6px;">Sistema de Fotocopiados UNAJ</div>
+                <div>Versión: <span style="font-weight:500;">v1.0.0</span></div>
+                <div>Autor: <a href="https://mauricioricotti.free.nf/?i=1" target="_blank" style="color:#3b82f6;text-decoration:none;">Mauricio Ricotti</a></div>
+                <div style="margin-top:8px;">
+                    <a href="https://wa.me/541141948773?text=Hola%20Mauricio%2C%20te%20contacto%20desde%20el%20Sistema%20de%20Fotocopiados%20UNAJ" style="color:#059669;text-decoration:none;" target="_blank">
+                        Contactar
+                    </a>
+                </div>
+                <div style="margin-top:10px;font-size:0.97rem;color:var(--text-secondary);">
+                    <span>Sistema creado por un estudiante de Ingeniería en Informática en la Universidad Nacional Arturo Jauretche.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="watermark-footer">
+    <script src="/Code.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<div id="modalPasswordAdminImpresoras" style="display:none;position:fixed;z-index:10001;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
+    <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:340px;text-align:center;">
+        <h2 style="margin-bottom:18px;font-size:1.2rem;color:var(--text-heading);">Contraseña de administrador</h2>
+        <input type="password" id="inputPasswordAdminImpresoras" class="calc-input" placeholder="Contraseña" style="margin-bottom:18px;">
+        <div style="display:flex;gap:10px;">
+            <button class="calc-btn calc-btn-primary" id="btnConfirmarPasswordAdminImpresoras">Ingresar</button>
+            <button class="calc-btn calc-btn-secondary" id="btnCancelarPasswordAdminImpresoras">Cancelar</button>
+        </div>
+        <div id="msgPasswordAdminImpresoras" style="color:#ef4444;margin-top:12px;font-size:0.98rem;"></div>
+    </div>
+</div>
+
+        <script>
+    window.addEventListener("DOMContentLoaded", function() {
+        const logo = document.getElementById("loaderUNAJLogo");
+        const textos = document.querySelector(".loader-textos");
+        if (logo) logo.classList.add("loader-fade-in");
+        if (textos) textos.classList.add("loader-fade-in");
+        setTimeout(function() {
+            const loader = document.getElementById("loaderUNAJ");
+            if (logo) logo.classList.remove("loader-fade-in");
+            if (textos) textos.classList.remove("loader-fade-in");
+            if (loader) {
+                loader.classList.add("loader-hide");
+                setTimeout(() => loader.style.display = "none", 700);
+            }
+        }, 1500);
+    });
+    </script>
+
+    <!-- <audio id="audioBienvenida" src="imagenes/short-logo-with-piano-and-violin-133358.mp3" preload="auto"></audio>
+    <script>
+    window.addEventListener('DOMContentLoaded', function() {
+        const audio = document.getElementById('audioBienvenida');
+        audio.volume = 0.5;
+        audio.play().catch(() => {
+            const playOnInteraction = () => {
+                audio.play();
+                document.removeEventListener('click', playOnInteraction);
+                document.removeEventListener('touchstart', playOnInteraction);
+            };
+            document.addEventListener('click', playOnInteraction);
+            document.addEventListener('touchstart', playOnInteraction);
+        });
+    });
+    </script> -->
+</body>
+</html>
