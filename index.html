@@ -1,68 +1,65 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sistema de Fotocopiados - UNAJ</title>
-  
-  <script>
-    try {
-      const tema = localStorage.getItem("calcTema") || "light";
-      document.documentElement.setAttribute("data-theme", tema);
-    } catch (e) {}
-  </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Fotocopiados - UNAJ</title>
 
-  <!-- ✅ RUTA CORREGIDA -->
-  <link rel="stylesheet" href="Style.css">
+    <script>
+      try {
+        const tema = localStorage.getItem("calcTema") || "light";
+        document.documentElement.setAttribute("data-theme", tema);
+      } catch(e){}
+    </script>
 
-  <!-- Librerías externas -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- ✅ RUTA CORREGIDA -->
+    <link rel="stylesheet" href="Style.css">
 
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
-    import { getDatabase, ref, set, get, onValue, off } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyC0YFv49AUWjZtEl2KxgiytnFG4bzv5sMA",
-      authDomain: "fotocopiado-unaj.firebaseapp.com",
-      databaseURL: "https://fotocopiado-unaj-default-rtdb.firebaseio.com/",
-      projectId: "fotocopiado-unaj",
-      storageBucket: "fotocopiado-unaj.firebasestorage.app",
-      messagingSenderId: "198572714385",
-      appId: "1:198572714385:web:2ec73dfa4386daa47a5230",
-      measurementId: "G-SNQ58PSQJ2"
-    };
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+        import { getDatabase, ref, set, get, onValue, off } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
 
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0YFv49AUWjZtEl2KxgiytnFG4bzv5sMA",
+            authDomain: "fotocopiado-unaj.firebaseapp.com",
+            databaseURL: "https://fotocopiado-unaj-default-rtdb.firebaseio.com/",
+            projectId: "fotocopiado-unaj",
+            storageBucket: "fotocopiado-unaj.firebasestorage.app",
+            messagingSenderId: "198572714385",
+            appId: "1:198572714385:web:2ec73dfa4386daa47a5230",
+            measurementId: "G-SNQ58PSQJ2"
+        };
 
-    window.firebaseApp = app;
-    window.firebaseDatabase = database;
-    window.firebaseRef = ref;
-    window.firebaseSet = set;
-    window.firebaseGet = get;
-    window.firebaseOnValue = onValue;
-    window.firebaseOff = off;
-    window.firebaseInitialized = true;
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
 
-    console.log("[v0] Firebase v9+ inicializado correctamente");
-  </script>
+        window.firebaseApp = app;
+        window.firebaseDatabase = database;
+        window.firebaseRef = ref;
+        window.firebaseSet = set;
+        window.firebaseGet = get;
+        window.firebaseOnValue = onValue;
+        window.firebaseOff = off;
+        window.firebaseInitialized = true;
 
-  <!-- ✅ RUTA CORREGIDA -->
-  <link rel="icon" type="image/png" href="imagenes/unaj-removebg-preview.png">
+        console.log("[v0] Firebase v9+ inicializado correctamente");
+    </script>
+
+    <!-- ✅ RUTA CORREGIDA -->
+    <link rel="icon" type="image/png" href="imagenes/unaj-removebg-preview.png">
 </head>
 
 <body>
-  <div id="loaderUNAJ">
-    <!-- ✅ RUTA CORREGIDA -->
-    <img src="imagenes/unaj-removebg-preview.png" alt="UNAJ Logo" id="loaderUNAJLogo">
-    <div class="loader-textos">
-      <div class="loader-titulo">Universidad Nacional Arturo Jauretche</div>
-      <div class="loader-autor">Por Mauricio Ricotti</div>
+    <div id="loaderUNAJ">
+        <img src="imagenes/unaj-removebg-preview.png" alt="UNAJ Logo" id="loaderUNAJLogo">
+        <div class="loader-textos">
+            <div class="loader-titulo">Universidad Nacional Arturo Jauretche</div>
+            <div class="loader-autor">Por Mauricio Ricotti</div>
+        </div>
     </div>
-  </div>
-
   <div id="turnoSelectorFixed" 
        style="display:none;position:fixed;top:18px;right:18px;z-index:1001;
        background:var(--bg-card);padding:6px 12px 6px 10px;border-radius:8px;
@@ -992,40 +989,33 @@
     </div>
 
     <footer class="watermark-footer">
-    <script src="/Code.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+      <!-- ✅ RUTA CORREGIDA -->
+      <script src="Code.js"></script>
 
-<div id="modalPasswordAdminImpresoras" style="display:none;position:fixed;z-index:10001;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
-    <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:340px;text-align:center;">
-        <h2 style="margin-bottom:18px;font-size:1.2rem;color:var(--text-heading);">Contraseña de administrador</h2>
-        <input type="password" id="inputPasswordAdminImpresoras" class="calc-input" placeholder="Contraseña" style="margin-bottom:18px;">
-        <div style="display:flex;gap:10px;">
-            <button class="calc-btn calc-btn-primary" id="btnConfirmarPasswordAdminImpresoras">Ingresar</button>
-            <button class="calc-btn calc-btn-secondary" id="btnCancelarPasswordAdminImpresoras">Cancelar</button>
-        </div>
-        <div id="msgPasswordAdminImpresoras" style="color:#ef4444;margin-top:12px;font-size:0.98rem;"></div>
-    </div>
-</div>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
-        <script>
-    window.addEventListener("DOMContentLoaded", function() {
-        const logo = document.getElementById("loaderUNAJLogo");
-        const textos = document.querySelector(".loader-textos");
-        if (logo) logo.classList.add("loader-fade-in");
-        if (textos) textos.classList.add("loader-fade-in");
-        setTimeout(function() {
-            const loader = document.getElementById("loaderUNAJ");
-            if (logo) logo.classList.remove("loader-fade-in");
-            if (textos) textos.classList.remove("loader-fade-in");
-            if (loader) {
-                loader.classList.add("loader-hide");
-                setTimeout(() => loader.style.display = "none", 700);
-            }
-        }, 1500);
-    });
-    </script>
+      <script>
+        window.addEventListener("DOMContentLoaded", function() {
+            const logo = document.getElementById("loaderUNAJLogo");
+            const textos = document.querySelector(".loader-textos");
+            if (logo) logo.classList.add("loader-fade-in");
+            if (textos) textos.classList.add("loader-fade-in");
+            setTimeout(function() {
+                const loader = document.getElementById("loaderUNAJ");
+                if (logo) logo.classList.remove("loader-fade-in");
+                if (textos) textos.classList.remove("loader-fade-in");
+                if (loader) {
+                    loader.classList.add("loader-hide");
+                    setTimeout(() => loader.style.display = "none", 700);
+                }
+            }, 1500);
+        });
+       </script>
+    </footer>
+</body>
+</html>
 
     <!-- <audio id="audioBienvenida" src="imagenes/short-logo-with-piano-and-violin-133358.mp3" preload="auto"></audio>
     <script>
@@ -1046,4 +1036,5 @@
 </body>
 
 </html>
+
 
