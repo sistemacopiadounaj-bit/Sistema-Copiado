@@ -1,66 +1,85 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Fotocopiados - UNAJ</title>
-    <script>
-      try {
-        const tema = localStorage.getItem("calcTema") || "light";
-        document.documentElement.setAttribute("data-theme", tema);
-      } catch(e){}
-    </script>
-    <link rel="stylesheet" href="/Style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
-        import { getDatabase, ref, set, get, onValue, off } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Fotocopiados - UNAJ</title>
+  
+  <script>
+    try {
+      const tema = localStorage.getItem("calcTema") || "light";
+      document.documentElement.setAttribute("data-theme", tema);
+    } catch (e) {}
+  </script>
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyC0YFv49AUWjZtEl2KxgiytnFG4bzv5sMA",
-            authDomain: "fotocopiado-unaj.firebaseapp.com",
-            databaseURL: "https://fotocopiado-unaj-default-rtdb.firebaseio.com/",
-            projectId: "fotocopiado-unaj",
-            storageBucket: "fotocopiado-unaj.firebasestorage.app",
-            messagingSenderId: "198572714385",
-            appId: "1:198572714385:web:2ec73dfa4386daa47a5230",
-            measurementId: "G-SNQ58PSQJ2"
-        };
+  <!-- ✅ RUTA CORREGIDA -->
+  <link rel="stylesheet" href="Style.css">
 
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
+  <!-- Librerías externas -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-        window.firebaseApp = app;
-        window.firebaseDatabase = database;
-        window.firebaseRef = ref;
-        window.firebaseSet = set;
-        window.firebaseGet = get;
-        window.firebaseOnValue = onValue;
-        window.firebaseOff = off;
-        window.firebaseInitialized = true;
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+    import { getDatabase, ref, set, get, onValue, off } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
 
-        console.log("[v0] Firebase v9+ inicializado correctamente");
-    </script>
-    <link rel="icon" type="image/png" href="imagenes/unaj-removebg-preview.png">
+    const firebaseConfig = {
+      apiKey: "AIzaSyC0YFv49AUWjZtEl2KxgiytnFG4bzv5sMA",
+      authDomain: "fotocopiado-unaj.firebaseapp.com",
+      databaseURL: "https://fotocopiado-unaj-default-rtdb.firebaseio.com/",
+      projectId: "fotocopiado-unaj",
+      storageBucket: "fotocopiado-unaj.firebasestorage.app",
+      messagingSenderId: "198572714385",
+      appId: "1:198572714385:web:2ec73dfa4386daa47a5230",
+      measurementId: "G-SNQ58PSQJ2"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    window.firebaseApp = app;
+    window.firebaseDatabase = database;
+    window.firebaseRef = ref;
+    window.firebaseSet = set;
+    window.firebaseGet = get;
+    window.firebaseOnValue = onValue;
+    window.firebaseOff = off;
+    window.firebaseInitialized = true;
+
+    console.log("[v0] Firebase v9+ inicializado correctamente");
+  </script>
+
+  <!-- ✅ RUTA CORREGIDA -->
+  <link rel="icon" type="image/png" href="imagenes/unaj-removebg-preview.png">
 </head>
-<body>
-    <div id="loaderUNAJ">
-        <img src="/imagenes/unaj-removebg-preview.png" alt="UNAJ Logo" id="loaderUNAJLogo">
-        <div class="loader-textos">
-            <div class="loader-titulo">Universidad Nacional Arturo Jauretche</div>
-            <div class="loader-autor">Por Mauricio Ricotti</div>
-        </div>
-    </div>
 
-    <div id="turnoSelectorFixed" style="display:none;position:fixed;top:18px;right:18px;z-index:1001;background:var(--bg-card);padding:6px 12px 6px 10px;border-radius:8px;box-shadow:0 2px 8px var(--shadow);border:1px solid var(--border-color);display:flex;align-items:center;gap:6px;font-size:0.95rem;min-width:110px;">
-        <label for="turnoSelect" style="font-weight:600;font-size:0.97rem;">Turno:</label>
-        <select id="turnoSelect" class="calc-select" style="width:auto;display:inline-block;font-size:0.97rem;padding:6px 18px 6px 8px;">
-            <option value="TM">Mañana</option>
-            <option value="TT">Tarde</option>
-            <option value="TU">Turno único</option>
-        </select>
+<body>
+  <div id="loaderUNAJ">
+    <!-- ✅ RUTA CORREGIDA -->
+    <img src="imagenes/unaj-removebg-preview.png" alt="UNAJ Logo" id="loaderUNAJLogo">
+    <div class="loader-textos">
+      <div class="loader-titulo">Universidad Nacional Arturo Jauretche</div>
+      <div class="loader-autor">Por Mauricio Ricotti</div>
     </div>
+  </div>
+
+  <div id="turnoSelectorFixed" 
+       style="display:none;position:fixed;top:18px;right:18px;z-index:1001;
+       background:var(--bg-card);padding:6px 12px 6px 10px;border-radius:8px;
+       box-shadow:0 2px 8px var(--shadow);border:1px solid var(--border-color);
+       display:flex;align-items:center;gap:6px;font-size:0.95rem;min-width:110px;">
+       
+    <label for="turnoSelect" style="font-weight:600;font-size:0.97rem;">Turno:</label>
+    <select id="turnoSelect" class="calc-select" 
+            style="width:auto;display:inline-block;font-size:0.97rem;padding:6px 18px 6px 8px;">
+      <option value="TM">Mañana</option>
+      <option value="TT">Tarde</option>
+      <option value="TU">Turno único</option>
+    </select>
+  </div>
+</body>
+</html>
+
 
     <div id="turnoModal" style="display:none;position:fixed;z-index:2000;top:0;left:0;width:100vw;height:100vh;background:rgba(30,41,59,0.45);backdrop-filter:blur(2px);align-items:center;justify-content:center;">
         <div style="background:var(--bg-card);padding:32px 24px;border-radius:14px;box-shadow:0 8px 32px rgba(0,0,0,0.18);max-width:95vw;width:340px;text-align:center;">
@@ -1021,4 +1040,5 @@
     });
     </script> -->
 </body>
+
 </html>
